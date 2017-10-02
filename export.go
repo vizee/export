@@ -15,6 +15,7 @@ var (
 
 // Register a command handler or delete command if fn is nil.
 func Register(cmd string, fn func([]string) []byte) {
+	cmd = strings.ToUpper(cmd)
 	cmdmu.Lock()
 	if fn != nil {
 		cmds[cmd] = fn
@@ -32,13 +33,21 @@ func Serve(r io.Reader, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		tokens := strings.Split(string(bytes.TrimSpace(ln)), " ")
+		ln = bytes.TrimSpace(ln)
+		tokens := strings.Split(string(ln), " ")
 		cmdmu.RLock()
 		fn := cmds[strings.ToUpper(tokens[0])]
 		cmdmu.RUnlock()
 		var reply []byte
 		if fn != nil {
 			reply = fn(tokens[1:])
+		} else if len(ln) > 0 {
+			cmdmu.RLock()
+			for cmd := range cmds {
+				reply = append(reply, cmd...)
+				reply = append(reply, '\n')
+			}
+			cmdmu.RLock()
 		}
 		if len(reply) == 0 {
 			continue
