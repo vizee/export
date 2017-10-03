@@ -21,11 +21,11 @@ import (
 
 type StrVar string
 
-func (v *StrVar) Load() []byte {
+func (v *StrVar) Get() []byte {
     return []byte(*v)
 }
 
-func (v *StrVar) Store(s string) []byte {
+func (v *StrVar) Set(s string) []byte {
     o := []byte(*v)
     *v = StrVar(s)
     return o

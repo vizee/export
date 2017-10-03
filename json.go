@@ -9,7 +9,7 @@ type stringer interface {
 	String() string
 }
 
-func structToJson(d []byte, indent []byte, rv reflect.Value) []byte {
+func structToJSON(d []byte, indent []byte, rv reflect.Value) []byte {
 	d = append(d, '{')
 	if rv.NumField() > 0 {
 		indent = append(indent, "    "...)
@@ -22,7 +22,7 @@ func structToJson(d []byte, indent []byte, rv reflect.Value) []byte {
 			d = append(d, indent...)
 			d = strconv.AppendQuote(d, rt.Field(i).Name)
 			d = append(d, ':', ' ')
-			d = valueToJson(d, indent, rv.Field(i))
+			d = valueToJSON(d, indent, rv.Field(i))
 		}
 		d = append(d, '\n')
 		d = append(d, indent[:len(indent)-4]...)
@@ -31,7 +31,7 @@ func structToJson(d []byte, indent []byte, rv reflect.Value) []byte {
 	return d
 }
 
-func arrayToJson(d []byte, indent []byte, rv reflect.Value) []byte {
+func arrayToJSON(d []byte, indent []byte, rv reflect.Value) []byte {
 	d = append(d, '[')
 	if rv.Len() > 0 {
 		indent = append(indent, "    "...)
@@ -41,7 +41,7 @@ func arrayToJson(d []byte, indent []byte, rv reflect.Value) []byte {
 			if i != 0 {
 				d = append(d, ',', ' ')
 			}
-			d = valueToJson(d, indent, rv.Index(i))
+			d = valueToJSON(d, indent, rv.Index(i))
 		}
 		d = append(d, '\n')
 		d = append(d, indent[:len(indent)-4]...)
@@ -50,7 +50,7 @@ func arrayToJson(d []byte, indent []byte, rv reflect.Value) []byte {
 	return d
 }
 
-func ifaceToJson(d []byte, indent []byte, e interface{}) ([]byte, bool) {
+func ifaceToJSON(d []byte, indent []byte, e interface{}) ([]byte, bool) {
 	if s, ok := e.(stringer); ok {
 		return strconv.AppendQuote(d, s.String()), true
 	}
@@ -71,10 +71,10 @@ func ifaceToJson(d []byte, indent []byte, e interface{}) ([]byte, bool) {
 	return d, true
 }
 
-func valueToJson(d []byte, indent []byte, rv reflect.Value) []byte {
+func valueToJSON(d []byte, indent []byte, rv reflect.Value) []byte {
 	if rv.CanInterface() {
 		var ok bool
-		d, ok = ifaceToJson(d, indent, rv.Interface())
+		d, ok = ifaceToJSON(d, indent, rv.Interface())
 		if ok {
 			return d
 		}
@@ -87,9 +87,9 @@ func valueToJson(d []byte, indent []byte, rv reflect.Value) []byte {
 			d = strconv.AppendUint(d, uint64(rv.Pointer()), 10)
 		}
 	case reflect.Struct:
-		d = structToJson(d, indent, rv)
+		d = structToJSON(d, indent, rv)
 	case reflect.Slice, reflect.Array:
-		d = arrayToJson(d, indent, rv)
+		d = arrayToJSON(d, indent, rv)
 	default:
 		d = append(d, `"kind: `...)
 		d = strconv.AppendUint(d, uint64(rv.Kind()), 10)

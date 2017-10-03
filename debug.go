@@ -57,7 +57,7 @@ func readRuntimeStack() []byte {
 func readMemStats() []byte {
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
-	return structToJson(make([]byte, 0, 128), nil, reflect.ValueOf(&mem).Elem())
+	return structToJSON(make([]byte, 0, 128), nil, reflect.ValueOf(&mem).Elem())
 }
 
 func handleGCStats(v string) []byte {
@@ -66,7 +66,7 @@ func handleGCStats(v string) []byte {
 	}
 	var st debug.GCStats
 	debug.ReadGCStats(&st)
-	return structToJson(make([]byte, 0, 64), nil, reflect.ValueOf(&st).Elem())
+	return structToJSON(make([]byte, 0, 64), nil, reflect.ValueOf(&st).Elem())
 }
 
 func handleGOMAXPROCS(v string) []byte {
@@ -169,17 +169,17 @@ func onCmdProfile(args []string) []byte {
 }
 
 func init() {
-	vars["os.Args"] = readOnlyFunc(readOSArgs)
+	vars["os.Args"] = GetOnlyFunc(readOSArgs)
 	vars["runtime.GOOS"] = runtime.GOOS
 	vars["runtime.GOARCH"] = runtime.GOARCH
 	vars["runtime.Version"] = runtime.Version()
-	vars["runtime.NumGoroutine"] = readOnlyFunc(readNumGoroutine)
-	vars["runtime.Stack"] = readOnlyFunc(readRuntimeStack)
-	vars["runtime.MemStats"] = readOnlyFunc(readMemStats)
-	vars["runtime.GOMAXPROCS"] = handlerFunc(handleGOMAXPROCS)
-	vars["debug.GCStats"] = handlerFunc(handleGCStats)
-	vars["debug.SetMaxThreads"] = handlerFunc(handleSetMaxThreads)
-	vars["debug.SetGCPercent"] = handlerFunc(handleSetGCPercent)
+	vars["runtime.NumGoroutine"] = GetOnlyFunc(readNumGoroutine)
+	vars["runtime.Stack"] = GetOnlyFunc(readRuntimeStack)
+	vars["runtime.MemStats"] = GetOnlyFunc(readMemStats)
+	vars["runtime.GOMAXPROCS"] = VarFunc(handleGOMAXPROCS)
+	vars["debug.GCStats"] = VarFunc(handleGCStats)
+	vars["debug.SetMaxThreads"] = VarFunc(handleSetMaxThreads)
+	vars["debug.SetGCPercent"] = VarFunc(handleSetGCPercent)
 
 	cmds["PPROF"] = onCmdPprof
 	cmds["TRACE"] = onCmdTrace

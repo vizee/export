@@ -12,8 +12,8 @@ var (
 
 // Var is an abstract type for exported variable.
 type Var interface {
-	Load() []byte
-	Store(v string) []byte
+	Get() []byte
+	Set(v string) []byte
 }
 
 // Any export a Var by name.
@@ -63,17 +63,23 @@ func ReadOnly(name string, v string) {
 	varmu.Unlock()
 }
 
-type readOnlyFunc func() []byte
+// VarFunc type use a function as export.Var.
+type VarFunc func(string) []byte
 
-func (fn readOnlyFunc) Load() []byte { return fn() }
+// Get calls function with an empty string.
+func (fn VarFunc) Get() []byte { return fn("") }
 
-func (fn readOnlyFunc) Store(string) []byte { return nil }
+// Set calls function with SET argument.
+func (fn VarFunc) Set(v string) []byte { return fn(v) }
 
-type handlerFunc func(string) []byte
+// GetOnlyFunc type use a function as export.Var but no Set.
+type GetOnlyFunc func() []byte
 
-func (fn handlerFunc) Load() []byte { return fn("") }
+// Get calls function.
+func (fn GetOnlyFunc) Get() []byte { return fn() }
 
-func (fn handlerFunc) Store(v string) []byte { return fn(v) }
+// Set always return nil.
+func (fn GetOnlyFunc) Set(string) []byte { return nil }
 
 func linefeed(reply []byte) []byte {
 	if reply != nil {
@@ -104,7 +110,7 @@ func onCmdGet(args []string) []byte {
 	v := vars[args[0]]
 	varmu.RUnlock()
 	if any, ok := v.(Var); ok {
-		return linefeed(any.Load())
+		return linefeed(any.Get())
 	}
 	var (
 		buf   [32]byte
@@ -134,7 +140,7 @@ func onCmdSet(args []string) []byte {
 		return nil
 	}
 	if any, ok := v.(Var); ok {
-		return linefeed(any.Store(args[1]))
+		return linefeed(any.Set(args[1]))
 	}
 	var (
 		buf   [32]byte
