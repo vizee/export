@@ -3,6 +3,7 @@ package export
 import (
 	"strconv"
 	"sync"
+	"sync/atomic"
 )
 
 var (
@@ -38,6 +39,26 @@ func Bool(name string, v *bool) {
 
 // Int export an integer variable by name.
 func Int(name string, v *int) {
+	if v == nil {
+		return
+	}
+	varmu.Lock()
+	vars[name] = v
+	varmu.Unlock()
+}
+
+// Int32 export an 32-bit integer variable by name.
+func Int32(name string, v *int32) {
+	if v == nil {
+		return
+	}
+	varmu.Lock()
+	vars[name] = v
+	varmu.Unlock()
+}
+
+// Int64 export an 64-bit integer variable by name.
+func Int64(name string, v *int64) {
 	if v == nil {
 		return
 	}
@@ -121,6 +142,10 @@ func onCmdGet(args []string) []byte {
 		reply = strconv.AppendBool(buf[:0], *x)
 	case *int:
 		reply = strconv.AppendInt(buf[:0], int64(*x), 10)
+	case *int32:
+		reply = strconv.AppendInt(buf[:0], int64(*x), 10)
+	case *int64:
+		reply = strconv.AppendInt(buf[:0], *x, 10)
 	case *string:
 		reply = strconv.AppendQuote(buf[:0], *x)
 	case string:
@@ -154,6 +179,12 @@ func onCmdSet(args []string) []byte {
 		reply = strconv.AppendInt(buf[:0], int64(*x), 10)
 		t, _ := strconv.ParseInt(args[1], 10, 64)
 		*x = int(t)
+	case *int32:
+		t, _ := strconv.ParseInt(args[1], 10, 64)
+		reply = strconv.AppendInt(buf[:0], int64(atomic.SwapInt32(x, int32(t))), 10)
+	case *int64:
+		t, _ := strconv.ParseInt(args[1], 10, 64)
+		reply = strconv.AppendInt(buf[:0], atomic.SwapInt64(x, t), 10)
 	case *string:
 		reply = strconv.AppendQuote(buf[:0], *x)
 		if s := args[1]; len(s) >= 2 && s[0] == s[len(s)-1] && s[0] == '"' {
