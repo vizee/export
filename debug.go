@@ -113,6 +113,9 @@ func fetchProfile(args []string) []byte {
 		debug, _ = strconv.Atoi(args[1])
 	}
 	p := pprof.Lookup(args[0])
+	if p == nil {
+		return nil
+	}
 	var buf bytes.Buffer
 	p.WriteTo(&buf, debug)
 	return buf.Bytes()
