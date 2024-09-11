@@ -2,6 +2,7 @@ package export
 
 import (
 	"errors"
+	"slices"
 	"strconv"
 	"sync"
 )
@@ -31,6 +32,17 @@ func Lookup(name string) Var {
 	varslock.RLock()
 	defer varslock.RUnlock()
 	return vars[name]
+}
+
+func AllVars() []string {
+	varslock.RLock()
+	l := make([]string, 0, len(vars))
+	for k := range vars {
+		l = append(l, k)
+	}
+	varslock.RUnlock()
+	slices.Sort(l)
+	return l
 }
 
 type GetOnly func() []byte
