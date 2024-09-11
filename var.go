@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"sync/atomic"
 )
 
 var (
@@ -216,6 +217,21 @@ func (ro readOnly) Get() []byte {
 }
 
 func (ro readOnly) Set(v string) error {
+	return nil
+}
+
+type atomicU64 atomic.Uint64
+
+func (v *atomicU64) Get() []byte {
+	return strconv.AppendUint(make([]byte, 0, 5), (*atomic.Uint64)(v).Load(), 10)
+}
+
+func (v *atomicU64) Set(x string) error {
+	t, err := strconv.ParseUint(x, 10, 64)
+	if err != nil {
+		return err
+	}
+	(*atomic.Uint64)(v).Store(t)
 	return nil
 }
 
