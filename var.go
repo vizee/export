@@ -27,6 +27,12 @@ func Register(name string, v Var) {
 	varslock.Unlock()
 }
 
+func Lookup(name string) Var {
+	varslock.RLock()
+	defer varslock.RUnlock()
+	return vars[name]
+}
+
 type GetOnly func() []byte
 
 func (fn GetOnly) Get() []byte {
