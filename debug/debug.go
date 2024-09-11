@@ -3,7 +3,6 @@ package debug
 import (
 	"bytes"
 	"encoding/json"
-	"export"
 	"os"
 	"runtime"
 	"runtime/debug"
@@ -11,6 +10,8 @@ import (
 	"runtime/trace"
 	"strconv"
 	"time"
+
+	"github.com/vizee/export"
 )
 
 type debugFunc func(x string) []byte
